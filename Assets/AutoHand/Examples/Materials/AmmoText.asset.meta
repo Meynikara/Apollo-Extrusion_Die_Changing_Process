@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c607c308843b9fb4c951d96d3e14d8f3
+timeCreated: 1484171803
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 165323
+  packageName: Auto Hand - VR Interaction
+  packageVersion: 4.0.0
+  assetPath: Assets/AutoHand/Examples/Materials/AmmoText.asset
+  uploadId: 672110
