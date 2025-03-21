@@ -1,147 +1,88 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Proyecto26;
+
+[System.Serializable]
+public class QuestionData
+{
+    public string type;
+    public string question;
+    public int score;
+}
+
+[System.Serializable]
+public class ScoreSubmitData
+{
+    public string user_id;
+    public string team_id;
+    public QuestionData questions;
+}
 
 public class ScoreManager : MonoBehaviour
 {
-    [Header("Tyre Triggers")]
-    [SerializeField] private List<BoxCollider> _leftTriggers;
-    [SerializeField] private List<BoxCollider> _rightTriggers;
+    public static ScoreManager Instance { get; private set; }
 
-    public bool _leftTyreBool;
-    public bool _rightTyreBool;
+    private string teamId;
+    private readonly string apiUrl = "https://dev.meynikara.com/energy-transfer-server/save-score";
 
-    [Header("REF")]
-    [SerializeField] private ScenarioManager _scenarioManager;
-    // Start is called before the first frame update
-    void Start()
+    private int _score;
+
+    private void Awake()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-  
-    public void CheckTriggers()
-    {
-        Debug.Log("testing");
-        CheckLeftTriggers(); // Checking Left Tyre collider all cutted 
-        CheckRightTriggers(); // Checking Right Tyre collider all cutted
-
-    }
-
-    void CheckLeftTriggers()
-    {
-        bool allDisabled = true;
-
-        foreach (BoxCollider col in _leftTriggers)
+        if (Instance == null)
         {
-            if (col != null && col.enabled)
-            {
-                allDisabled = false;
-                break;
-            }
-        }
-
-        if (allDisabled)
-        {
-            Debug.Log("All colliders are disabled");
-            _leftTyreBool = true;
-            PlayLeftTyreAnimation(); // Calling Next Task when all colliders are disable
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            Debug.Log("Some colliders are still enabled");
+            Destroy(gameObject);
         }
     }
 
-
-    void CheckRightTriggers()
+    public void SetTeamId(string id)
     {
-        bool allDisabled = true;
-
-        foreach (BoxCollider col in _rightTriggers)
-        {
-            if (col != null && col.enabled)
-            {
-                allDisabled = false;
-                break;
-            }
-        }
-
-        if (allDisabled)
-        {
-            Debug.Log("All colliders are disabled");
-            _rightTyreBool = true;
-            PlayRightTyreAnimation(); // Calling Next Task when all colliders are disable
-        }
-        else
-        {
-            Debug.Log("Some colliders are still enabled");
-        }
+        teamId = id;
+        Debug.Log($"Team ID set: {teamId}");
     }
 
-
-
-
-    //  Calling Left Tyre Animations
-    void PlayLeftTyreAnimation()
+    public void SubmitQuestion(string description, bool isMainStep, int score)
     {
-        if (_leftTyreBool)
+         _score+=score;
+        if (string.IsNullOrEmpty(teamId))
         {
-            _scenarioManager.NextTask("Remaining material");
-            return ;
+            Debug.LogError(" Team ID not set! Cannot submit score.");
+            return;
         }
-    }
 
-
-    //  Calling Left Tyre Animations
-    void PlayRightTyreAnimation()
-    {
-        if (_rightTyreBool)
+        QuestionData question = new QuestionData
         {
-            _scenarioManager.NextTask("Remaining material");
-            return ;
-        }
-    }
+            type = isMainStep ? "main" : "sub",
+            question = description,
+            score = score
+        };
 
-
-
-    // Reseting All Tyer Colliders 
-
-    public void ResetAllTyerColliders()
-    {
-        RestLeftCollider(); // Reseting Left Colliders
-        RestRightCollider(); // Reseting Left Colliders
-    }
-
-    void RestLeftCollider()
-    {
-        foreach(BoxCollider _col in _leftTriggers)
+        ScoreSubmitData submitData = new ScoreSubmitData
         {
-            if(_col != null)
-            {
-                _col.enabled = true;
-            }
-        }
-        _leftTyreBool = false;
-        return;
-    }
+            user_id = SystemInfo.deviceUniqueIdentifier, // Using device ID as user ID
+            team_id = teamId,
+            questions = question // ⬅️ Send a single object, not a list
+        };
 
-    void RestRightCollider()
-    {
-        foreach(BoxCollider _col in _rightTriggers)
+        string jsonData = JsonUtility.ToJson(submitData, true);
+        Debug.Log($"Sending Data: {jsonData}");
+
+        RestClient.Post(apiUrl, jsonData)
+        .Then(response =>
         {
-            if(_col != null)
-            {
-                _col.enabled = true;
-            }
-        }
-        _rightTyreBool = false;
-        return;
+            Debug.Log($" Successfully submitted: {description}");
+        })
+        .Catch(error =>
+        {
+            Debug.LogError($" Submission failed: {error.Message}");
+        });
+       
+    }
+    public int GetScore(){
+        return _score;
     }
 }

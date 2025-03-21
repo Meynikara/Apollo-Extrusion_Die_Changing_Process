@@ -28,6 +28,19 @@ public class ScenarioManager : MonoBehaviour
     public static bool UnGuided;
     public static bool Guided;
     // Start is called before the first frame update
+    public static ScenarioManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     void Start()
     {
         if (_onStart)

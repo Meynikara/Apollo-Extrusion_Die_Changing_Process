@@ -5,7 +5,7 @@ using UnityEngine;
 public class TyreCutter : MonoBehaviour
 {
 
-    [SerializeField] private ScoreManager _scoreManager;
+    [SerializeField] private ScoreManagerLocal _scoreManager;
     // Start is called before the first frame update
     void Start()
     {
